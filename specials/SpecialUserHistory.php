@@ -46,7 +46,7 @@ class SpecialUserHistory extends SpecialPage {
 	 * @return string
 	 */
 	protected function buildTable( $user_id ) {
-		$out = Xml::openElement( 'table', array( 'id' => 'user-history-table', 'class' => 'wikitable' ) );
+		$out = Xml::openElement( 'table', [ 'id' => 'user-history-table', 'class' => 'wikitable' ] );
 
 		// headers
 		$out .= "<tr>
@@ -56,12 +56,12 @@ class SpecialUserHistory extends SpecialPage {
 
 		$dbr = wfGetDB( DB_SLAVE );
 		$res = $dbr->select(
-			array( 'user_history', 'page' ),
-			array( 'uh_timestamp', 'page_title', 'page_id' ),
-			array( 'uh_user_id' => $user_id ),
+			[ 'user_history', 'page' ],
+			[ 'uh_timestamp', 'page_title', 'page_id' ],
+			[ 'uh_user_id' => $user_id ],
 			__METHOD__,
-			array( 'ORDER BY' => 'uh_timestamp DESC' ),
-			array( 'page' => array( 'INNER JOIN', array( 'user_history.uh_page_id=page.page_id' )) )
+			[ 'ORDER BY' => 'uh_timestamp DESC' ],
+			[ 'page' => [ 'INNER JOIN', [ 'user_history.uh_page_id=page.page_id' ] ] ]
 		);
 
 		// build rows

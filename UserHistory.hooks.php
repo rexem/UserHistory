@@ -39,7 +39,7 @@ class UserHistoryHooks {
 	 * @return bool
 	 */
 	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
-		$updater->addExtensionTable( 'user_history', __DIR__ . '/db/user_history.sql');
+		$updater->addExtensionTable( 'user_history', __DIR__ . '/db/user_history.sql' );
 		return true;
 	}
 }
