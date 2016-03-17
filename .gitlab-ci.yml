@@ -1,0 +1,14 @@
+before_script:
+  - php -v
+  - composer --version
+  - git --version
+  - ls -lah
+  - composer install -no-interaction
+
+stages:
+  - sniffer
+
+sniffer:
+  script:
+    - echo "Running phpcs"
+    - ./vendor/bin/phpcs
