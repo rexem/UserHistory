@@ -2,8 +2,9 @@ before_script:
   - php -v
   - composer --version
   - git --version
+  - pwd
   - ls -lah
-  - composer install -no-interaction
+  - composer install --no-interaction
 
 sniffer:
   script:
