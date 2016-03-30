@@ -1,11 +1,11 @@
 {
 	"name": "UserHistory",
-	"version": "0.1.1",
+	"version": "1.0.1",
 	"author": [
 		"Ramunas Geciauskas"
 	],
 	"url": "https://www.mediawiki.org/wiki/Extension:UserHistory",
-	"descriptionmsg": "TODO the UserHistory description",
+	"descriptionmsg": "UserHistory extension adds additional Special page which lists all your previously read articles",
 	"license-name": "MIT",
 	"type": "specialpage",
 	"AutoloadClasses": {
