@@ -5,7 +5,5 @@
 		]
 	},
 	"userhistory": "User History",
-	"userhistory-description": "This page lists your previously read articles",
-	"userhistory-accessed-date": "Read Date",
-	"userhistory-accessed-page": "Page"
+	"userhistory-description": "This page lists your previously read articles"
 }

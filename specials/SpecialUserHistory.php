@@ -5,9 +5,47 @@
  * @ingroup Extensions
  */
 
-class SpecialUserHistory extends SpecialPage {
-	public function __construct() {
-		parent::__construct( 'UserHistory' );
+class SpecialUserHistory extends QueryPage {
+	function __construct( $name = 'UserHistory' ) {
+		parent::__construct( $name );
+	}
+
+	public function isExpensive() {
+		return true;
+	}
+
+	public function isSyndicated() {
+		return false;
+	}
+
+	public function getQueryInfo() {
+		return [
+			'tables' => [ 'user_history', 'page' ],
+			'fields' => [
+				'uh_timestamp' => 'uh_timestamp',
+				'title' => 'page_title',
+				'namespace' => 'page_namespace'
+			],
+			'conds' => [
+				'uh_user_id' => $this->getUser()->getId(),
+				"page_namespace != '" . NS_MEDIAWIKI . "'"
+			],
+			'join_conds' => [
+				'page' => [ 'LEFT JOIN', [ 'user_history.uh_page_id=page.page_id' ] ]
+			]
+		];
+	}
+
+	public function sortDescending() {
+		return true;
+	}
+
+	public function getOrderFields() {
+		return [ 'uh_timestamp' ];
+	}
+
+	protected function getGroupName() {
+		return 'other';
 	}
 
 	/**
@@ -18,88 +56,25 @@ class SpecialUserHistory extends SpecialPage {
 	 * @return bool
 	 */
 	public function execute( $sub ) {
-		// display only for logged in users
-		if ( !$this->getUser()->isLoggedIn() ) {
-			$this->getOutput()->showErrorPage( 'exception-nologin', 'exception-nologin-text' );
+		$this->requireLogin();
+		$this->getOutput()->addWikiMsg( 'userhistory-description' );
 
-			return false;
-		}
-
-		$out = $this->getOutput();
-
-		$out->setPageTitle( $this->msg( 'userhistory' ) );
-		$out->addWikiMsg( 'userhistory-description' );
-		$out->addHTML( $this->buildTable( $this->getContext()->getUser()->getId() ) );
-
-		return true;
-	}
-
-	protected function getGroupName() {
-		return 'other';
+		parent::execute( $sub );
 	}
 
 	/**
-	 * Generates ready to output results table
+	 * Format the results
 	 *
-	 * @param $user_id
-	 *
-	 * @return string
+	 * @param Skin $skin
+	 * @param object $result Result row
+	 * @return string|bool String or false to skip
 	 */
-	protected function buildTable( $user_id ) {
-		$out = Xml::openElement( 'table', [ 'id' => 'user-history-table', 'class' => 'wikitable' ] );
+	function formatResult( $skin, $result ) {
+		$nt = Title::makeTitleSafe( $result->namespace, $result->title );
 
-		// headers
-		$out .= "<tr>
-			<th>" . $this->msg( 'userhistory-accessed-date' ) . "</th>
-			<th>" . $this->msg( 'userhistory-accessed-page' ) . "</th>
-		</tr>";
+		$page = Linker::linkKnown( $nt );
+		$details = $this->getLanguage()->userTimeAndDate( $result->uh_timestamp, $this->getUser() );
 
-		$dbr = wfGetDB( DB_SLAVE );
-		$res = $dbr->select(
-			[ 'user_history', 'page' ],
-			[ 'uh_timestamp', 'page_title', 'page_id' ],
-			[ 'uh_user_id' => $user_id ],
-			__METHOD__,
-			[ 'ORDER BY' => 'uh_timestamp DESC' ],
-			[ 'page' => [ 'INNER JOIN', [ 'user_history.uh_page_id=page.page_id' ] ] ]
-		);
-
-		// build rows
-		foreach ( $res as $row ) {
-			$elapsedTime = $this->getPrettyElapsedTime( $row->uh_timestamp );
-			$linkToPage = Linker::link( Title::newFromID( $row->page_id ) );
-
-			$out .= "<tr>
-				<td title=\"" . wfTimestamp( TS_DB, $row->uh_timestamp ) . "\">{$elapsedTime}</td>
-				<td>{$linkToPage}</td>
-			</tr>\n";
-		}
-
-		$out .= Xml::closeElement( 'table' );
-
-		return $out;
-	}
-
-	/**
-	 * Returns human-friendly string of elapsed time since the provided timestamp
-	 *
-	 * @param $timestamp
-	 *
-	 * @return string Human readable date/time string
-	 */
-	protected function getPrettyElapsedTime( $timestamp ) {
-		$elapsed = wfTimestampNow() - $timestamp;
-
-		if ( $elapsed <= 1 ) {
-			return $this->msg( 'just-now' );
-		} elseif ( $elapsed < 60 ) {
-			return $this->msg( 'seconds-ago', $elapsed );
-		} elseif ( $elapsed < 60 * 60 ) {
-			return $this->msg( 'minutes-ago', round( $elapsed / 60 ) );
-		} elseif ( $elapsed < 60 * 60 * 24 ) {
-			return $this->msg( 'hours-ago', round( $elapsed / ( 60 * 60 ) ) );
-		}
-
-		return wfTimestamp( TS_DB );
+		return $this->getLanguage()->specialList( $page, $details );
 	}
 }
